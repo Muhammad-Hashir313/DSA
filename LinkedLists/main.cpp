@@ -1,4 +1,6 @@
 #include <iostream>
+#include <string>
+#include <cctype>
 
 using namespace std;
 
@@ -140,6 +142,12 @@ public:
     void display()
     {
         Node *current = head;
+        if (current == NULL)
+        {
+            cout << "List empty\n";
+            return;
+        }
+
         while (current != NULL)
         {
             cout << current->data << " ";
@@ -165,13 +173,38 @@ void menu()
 int main()
 {
     LinkedList list;
+    string input;
     int choice;
 
     do
     {
         menu();
-        cout << "Enter your choice: ";
-        cin >> choice;
+        while (true)
+        {
+            cout << "Enter your choice: ";
+            cin >> input;
+
+            // Check if the input contains only digits
+            bool valid = true;
+            for (char ch : input)
+            {
+                if (!isdigit(ch))
+                {
+                    valid = false;
+                    break;
+                }
+            }
+
+            if (!valid)
+            {
+                cout << "Invalid input. Enter a valid number!\n";
+                continue;
+            }
+
+            // Convert the input to an integer after validation
+            choice = stoi(input);
+            break;
+        }
         int value, position;
         switch (choice)
         {
@@ -202,6 +235,9 @@ int main()
             break;
         case 6:
             list.deleteFromEnd();
+            break;
+        case 7:
+            list.display();
             break;
         case 0:
             exit(1);
