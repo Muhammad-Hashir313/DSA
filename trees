@@ -1,0 +1,92 @@
+#include<iostream>
+
+using namespace std;
+
+class Tree {
+private:
+	struct Node {
+		int num;
+		Node* left, * right;
+	};
+
+	Node* root;
+
+public:
+	Tree() {
+		root = NULL;
+	}
+
+	bool isEmpty() {
+		return (root == NULL);
+	}
+
+	void insertItem(int n) {
+		insertHelper(root, n);
+	}
+
+	void insertHelper(Node *&ptr, int n) {
+		if (ptr == NULL) {
+			ptr = new Node;
+			ptr->num = n;
+			ptr->right = ptr->left = NULL;
+		}
+
+		else if (n > ptr->num) {
+			insertHelper(ptr->right, n);
+		}
+
+		else if (n < ptr->num) {
+			insertHelper(ptr->left, n);
+		}
+		else {
+			cout << "Can't add duplicate in tree\n";
+		}
+	}
+
+	void preOrder() {
+		preOrderHelper(root);
+	}
+
+	void preOrderHelper(Node *ptr) {
+		if (ptr == NULL) {
+			cout << "No item in tree" << endl;
+			return;
+		}
+		cout << ptr->num << " ";
+		if (ptr->left != NULL) {
+			preOrderHelper(ptr->left);
+		}
+		if (ptr->right != NULL) {
+			preOrderHelper(ptr->right);
+		}
+	}
+
+	void postOrderHelper(Node* ptr) {
+		if (ptr == NULL) {
+			cout << "No item in tree" << endl;
+			return;
+		}
+		cout << ptr->left << " ";
+		if (ptr->right != NULL) {
+			postOrderHelper(ptr->right);
+		}
+		
+	}
+
+};
+
+int main() {
+	Tree t;
+
+	t.insertItem(5);
+	t.insertItem(3);
+	t.insertItem(6);
+	t.insertItem(2);
+	t.insertItem(4);
+	t.insertItem(7);
+
+	/*cout << "Pre Order: ";
+	t.preOrder();*/
+
+
+}
