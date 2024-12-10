@@ -1,194 +1,233 @@
 #include<iostream>
-#include<fstream>
 #include<string>
+#include<fstream>
+#include <algorithm> 
 
 using namespace std;
 
-class DLL {
+int getValidInt() {
+	int value;
+	while (!(cin >> value)) {
+		cin.clear();
+		cin.ignore(10000, '\n');
+		cout << "Invalid input. Please enter an integer: ";
+	}
+	return value;
+}
+
+class List {
 private:
-	struct Node {
-		int ID;
-		string name;
-		int age, score;
-		Node* left;
-		Node* right;
-	};
-	typedef Node* Nodeptr;
-	Nodeptr head;
+    struct Node {
+        string name;
+        int testSeries = 0;
+        int ODI = 0;
+        int T20 = 0;
+        Node* next = nullptr;
+        Node* previous = nullptr;
+    };
+
+    Node* head = nullptr;
+    Node* tail = nullptr;
+    int count = 0;
 
 public:
-	DLL() {
-		head = NULL;
-	}
+    void insertAtHead(string playerName, int playerTestSeries, int playerODI, int playerT20, bool writeToFile = true) {
+        Node* newNode = new Node();
+        newNode->name = playerName;
+        newNode->testSeries = playerTestSeries;
+        newNode->ODI = playerODI;
+        newNode->T20 = playerT20;
+        if (head == nullptr) {
+            head = tail = newNode;
+        }
+        else {
+            newNode->next = head;
+            head->previous = newNode;
+            head = newNode;
+        }
+        count++;
 
-	void insert(string n, int a, int s) {
-		Nodeptr newNode = new Node;
-		int id = rand() % 10000;
-		newNode->name = n;
-		newNode->age = a;
-		newNode->score = s;
-		if (head == NULL)
-		{
-			newNode->ID = id;
-			newNode->left = NULL;
-			newNode->right = NULL;
-			head = newNode;
-		}
-		else {
-			Nodeptr current = head;
-			newNode->right = head;
-			head->left = newNode;
-			newNode->left = NULL;
-			head = newNode;
-		}
+        if (writeToFile) {
+            string fileName = playerName + "_File.txt";
+            ofstream outFile(fileName);
+            if (outFile.is_open()) {
+                outFile << playerName << " " << playerTestSeries << " " << playerODI << " " << playerT20;
+                outFile.close();
+            }
+            ofstream playerFile("players_list.txt", ios::app);
+            if (playerFile.is_open()) {
+                playerFile << playerName << "\n";
+                playerFile.close();
+            }
+        }
+    }
 
-		// Write the new player's information to the file
-		ofstream outFile("players.txt", ios::app);
-		if (outFile.is_open()) {
-			outFile << "Name: " << n << ", Age: " << a << ", Score: " << s << endl;
-			outFile.close();
-		}
-		else {
-			cout << "Unable to open file for writing." << endl;
-		}
-	}
+    void Remove(string playerName) {
+        if (head == nullptr) {
+            cout << "The list is empty.\n";
+            return;
+        }
+        Node* current = head;
+        while (current != nullptr) {
+            if (current->name == playerName) {
+                if (current == head) {
+                    head = current->next;
+                    if (head != nullptr) head->previous = nullptr;
+                }
+                else if (current == tail) {
+                    tail = current->previous;
+                    if (tail != nullptr) tail->next = nullptr;
+                }
+                else {
+                    current->previous->next = current->next;
+                    current->next->previous = current->previous;
+                }
+                delete current;
+                count--;
 
-	void searchUsingName(string n) {
-		Nodeptr current = head;
-		while (current != NULL) {
-			if (current->name == n) {
-				cout << "ID: " << current->ID << ", Name: " << current->name << ", Age: " << current->age << ", Score: " << current->score;
-				cout << endl;
-			}
-			current = current->right;
-		}
-	}
+                string fileName = playerName + "_File.txt";
+                remove(fileName.c_str());
+                ifstream inFile("players_list.txt");
+                ofstream outFile("temp_players_list.txt");
+                string line;
+                while (getline(inFile, line)) {
+                    if (line != playerName) {
+                        outFile << line << "\n";
+                    }
+                }
+                inFile.close();
+                outFile.close();
+                remove("players_list.txt");
+                rename("temp_players_list.txt", "players_list.txt");
+                return;
+            }
+            current = current->next;
+        }
+        cout << "Player " << playerName << " not found in the list.\n";
+    }
 
-	void searchUsingId(int id) {
-		Nodeptr current = head;
-		while (current != NULL) {
-			if (current->ID == id) {
-				cout << "ID: " << current->ID << ", Name: " << current->name << ", Age: " << current->age << ", Score: " << current->score;
-				cout << endl;
-				return;
-			}
-			current = current->right;
-		}
-		cout << "Player not Found\n";
-	}
+    void update(string playerName) {
+        Node* current = head;
+        while (current != nullptr) {
+            if (current->name == playerName) {
+                cout << "Updating information for " << playerName << ":\n";
+                cout << "Enter new number of ODI: ";
+                current->ODI = getValidInt();
+                cout << "Enter new number of Test Series: ";
+                current->testSeries = getValidInt();
+                cout << "Enter new number of T20: ";
+                current->T20 = getValidInt();
 
-	void display() {
-		ifstream inFile("players.txt");
-		if (inFile.is_open()) {
-			string line;
-			cout << "Displaying players from file:" << endl;
-			while (getline(inFile, line)) {
-				cout << line << endl;
-			}
-			inFile.close();
-		}
-		else {
-			cout << "Unable to open file for reading." << endl;
-		}
-	}
+                string fileName = playerName + "_File.txt";
+                ofstream outFile(fileName);
+                if (outFile.is_open()) {
+                    outFile << "Player Name: " << current->name << "\nODI: " << current->ODI
+                        << "\nTest Series: " << current->testSeries << "\nT20: " << current->T20;
+                    outFile.close();
+                }
+                return;
+            }
+            current = current->next;
+        }
+        cout << "Player " << playerName << " not found in the list.\n";
+    }
+
+    void display() {
+        if (head == nullptr) {
+            cout << "No matches recorded yet.\n";
+            return;
+        }
+        Node* current = head;
+        while (current != nullptr) {
+            cout << "\n---------------------\n";
+            cout << "Name: " << current->name << "\nODI: " << current->ODI
+                << "\nTest Series: " << current->testSeries << "\nT20: " << current->T20;
+            current = current->next;
+        }
+    }
+
+    bool isEmpty() {
+        return head == nullptr;
+    }
+
+    int getCount() const {
+        return count;
+    }
+
+    void initializeFromFiles() {
+        ifstream playersFile("players_list.txt");
+        if (!playersFile.is_open()) return;
+
+        string playerName;
+        while (getline(playersFile, playerName)) {
+            string fileName = playerName + "_File.txt";
+            ifstream file(fileName);
+            if (file.is_open()) {
+                string name;
+                int odi, testSeries, t20;
+                file >> name >> testSeries >> odi >> t20;
+                insertAtHead(name, testSeries, odi, t20, false);
+                file.close();
+            }
+        }
+        playersFile.close();
+    }
 };
 
+
+
 int main() {
-    DLL dll;
-    int choice;
+	List players;
+	players.initializeFromFiles();
+	int choice, odi, t20, testseries;
+	string name;
+	while (true) {
+		cout << "\nMenu:\n1. Insert New Player \n2. Delete Player \n3. Update Player \n";
+		cout << "4. Display All Players \n5. Exit\n";
+		cout << "Enter choice: ";
+		choice = getValidInt();
 
-    do {
-        cout << "\n=====================================\n";
-        cout << "        PLAYER MANAGEMENT MENU       \n";
-        cout << "=====================================\n";
-        cout << "1. Insert a new player\n";
-        cout << "2. Remove a player\n";
-        cout << "3. Search for a player by Name\n";
-        cout << "4. Search for a player by ID\n";
-        cout << "5. Display all players\n";
-        cout << "6. Exit\n";
-        cout << "=====================================\n";
-        cout << "Enter your choice (1-6): ";
-
-        while (!(cin >> choice) || choice < 1 || choice > 6) {
-            cout << "Invalid input! Please enter a number between 1 and 6: ";
-            cin.clear();
-            cin.ignore(10000, '\n');   
-        }
-
-        cout << endl;
-
-        switch (choice) {
-            case 1: {
-                string name;
-                int age, score;
-
-                cin.ignore();
-                cout << "Enter player's name: ";
-                getline(cin, name);
-
-                cout << "Enter player's age: ";
-                while (!(cin >> age) || age < 1) {
-                    cout << "Invalid age! Please enter a value between 1 and 120: ";
-                    cin.clear();
-                    cin.ignore(10000, '\n');
-                }
-
-                cout << "Enter player's score: ";
-                while (!(cin >> score) || score < 0) {
-                    cout << "Invalid score! Please enter a value between 0 and 100: ";
-                    cin.clear();
-                    cin.ignore(10000, '\n');
-                }
-
-                dll.insert(name, age, score);
-                cout << "Player added successfully!\n";
-                break;
-            }
-
-            case 2: {
-                cout << "Feature not implemented yet. Stay tuned!\n";
-                break;
-            }
-
-            case 3: {
-                cin.ignore();
-                string name;
-                cout << "Enter player's name to search: ";
-                getline(cin, name);
-
-                cout << "Searching for player...\n";
-                dll.searchUsingName(name);
-                break;
-            }
-
-            case 4: {
-                int id;
-                cout << "Enter player's ID to search: ";
-                while (!(cin >> id) || id < 0) {
-                    cout << "Invalid ID! Please enter a positive integer: ";
-                    cin.clear();
-                    cin.ignore(10000, '\n');
-                }
-
-                cout << "Searching for player...\n";
-                dll.searchUsingId(id);
-                break;
-            }
-
-            case 5: {
-                cout << "Displaying all players:\n";
-                dll.display();
-                break;
-            }
-
-            case 6: {
-                cout << "Exiting the program. Goodbye!\n";
-                exit(1);
-                break;
-            }
-        }
-    } while (choice != 6);
-
-    return 0;
+		if (choice == 5) break;
+		switch (choice) {
+		case 1:
+			if (players.getCount() >= 20) {
+				cout << "Cannot add more players. Maximum limit of players reached.\n";
+				break;
+			}
+			cout << "Enter Name for Player: \n";
+			cin.ignore();
+			getline(cin, name);
+			transform(name.begin(), name.end(), name.begin(), toupper);
+			cout << "Enter number of ODI: \n";
+			odi = getValidInt();
+			cout << "Enter number of test series: \n";
+			testseries = getValidInt();
+			cout << "Enter number of T20: \n";
+			t20 = getValidInt();
+			players.insertAtHead(name, testseries, odi, t20);
+			cout << "player inserted sucessfully";
+			break;
+		case 2:
+			cout << "Enter player you want to delete: ";
+			cin.ignore();
+			getline(cin, name);
+			transform(name.begin(), name.end(), name.begin(), toupper);
+			players.Remove(name);
+			break;
+		case 3:
+			cout << "Enter player you want to update: ";
+			cin.ignore();
+			getline(cin, name);
+			transform(name.begin(), name.end(), name.begin(), toupper);
+			players.update(name);
+			break;
+		case 4:
+			cout << "List of players: \n";
+			players.display();
+			break;
+		default:
+			cout << "Invalid choice, please enter a number from 1 to 5.\n";
+		}
+	}
+	return 0;
 }
