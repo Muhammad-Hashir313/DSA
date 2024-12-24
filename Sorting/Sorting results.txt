@@ -1,0 +1,7 @@
+Size    Selection Sort          Bubble Sort             BST Sort
+10      0                       0                       0
+1000    3                       3                       0
+10000   408                     378                     0
+100000  29233                   35861                   6
+
+This is measured in milliseconds.
